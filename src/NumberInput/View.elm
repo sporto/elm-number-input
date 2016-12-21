@@ -1,5 +1,6 @@
 module NumberInput.View exposing (..)
 
+import Char
 import Html exposing (..)
 import Html.Attributes exposing (class, style, value)
 import Html.Events exposing (on, onWithOptions, keyCode, targetValue)
@@ -27,23 +28,55 @@ view config maybeValue =
 
 
 onKeyDownAttr : Config msg -> Maybe Float -> Attribute msg
-onKeyDownAttr config maybeValue =
+onKeyDownAttr config currentValue =
     let
         eventOptions =
             { stopPropagation = False
             , preventDefault = True
             }
 
+        unwrappedValue =
+            currentValue
+                |> Maybe.withDefault 0
+
         filterDecoder code =
-            if isNumber code then
-                Decode.fail "Number"
-            else
-                Decode.succeed code
+            case code of
+                13 ->
+                    Decode.fail "Enter"
+                        |> Decode.map (always (config.onChange currentValue))
+
+                _ ->
+                    -- Translated code to char
+                    -- Concat and evaluate if valid number
+                    let
+                        charAsString =
+                            Char.fromCode code
+                                |> String.fromChar
+
+                        unwrappedValueAsString =
+                            toString unwrappedValue
+
+                        concat =
+                            unwrappedValueAsString ++ charAsString
+
+                        result =
+                            String.toFloat concat
+
+                        newValue =
+                            case result of
+                                Ok n ->
+                                    Just n
+
+                                Err _ ->
+                                    currentValue
+                    in
+                        newValue
+                            |> config.onChange
+                            |> Decode.succeed
 
         decoder =
             keyCode
                 |> Decode.andThen filterDecoder
-                |> Decode.map (always (config.onChange maybeValue))
     in
         onWithOptions "keydown" eventOptions decoder
 
