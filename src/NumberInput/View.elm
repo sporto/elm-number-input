@@ -29,37 +29,10 @@ onKeyDownAttr config currentValue =
             , preventDefault = True
             }
 
-        filterDecoder code =
-            case code of
-                13 ->
-                    Decode.fail "Enter"
-                        |> Decode.map (always (config.onChange currentValue))
-
-                _ ->
-                    -- Translated code to char
-                    -- Concat and evaluate if valid number
-                    let
-                        charAsString =
-                            Char.fromCode code
-                                |> String.fromChar
-
-                        concat =
-                            currentValue ++ charAsString
-
-                        isValidNumberResult =
-                            String.toFloat concat
-
-                        newValue =
-                            case isValidNumberResult of
-                                Ok n ->
-                                    concat
-
-                                Err _ ->
-                                    currentValue
-                    in
-                        newValue
-                            |> config.onChange
-                            |> Decode.succeed
+        filterDecoder =
+            makeNewValue currentValue
+                >> config.onChange
+                >> Decode.succeed
 
         decoder =
             keyCode
@@ -85,3 +58,23 @@ onChangeAttr config =
 isNumber : Int -> Bool
 isNumber keyCode =
     (keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)
+
+
+makeNewValue : String -> Int -> String
+makeNewValue currentValue keycode =
+    let
+        charAsString =
+            Char.fromCode keycode |> String.fromChar
+
+        concatenated =
+            currentValue ++ charAsString
+
+        result =
+            String.toFloat concatenated
+    in
+        case result of
+            Ok n ->
+                concatenated
+
+            Err _ ->
+                currentValue
