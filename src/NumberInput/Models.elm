@@ -4,12 +4,12 @@ module NumberInput.Models exposing (..)
 type alias Config msg =
     { inputClass : String
     , inputStyles : List ( String, String )
-    , onChange : Float -> msg
+    , onChange : Maybe Float -> msg
     , placeholder : Maybe String
     }
 
 
-newConfig : (Float -> msg) -> Config msg
+newConfig : (Maybe Float -> msg) -> Config msg
 newConfig onChange =
     { inputClass = ""
     , inputStyles = []

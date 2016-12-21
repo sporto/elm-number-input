@@ -33,7 +33,7 @@ Your application messages need to include:
 -}
 type Msg
     = NoOp
-    | OnChange Float
+    | OnChange (Maybe Float)
 
 
 {-|
@@ -58,9 +58,8 @@ Your update function should route messages back to the Select component, see `Se
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case Debug.log "msg" msg of
-        -- OnSelect is triggered when a selection is made on the Select component.
         OnChange value ->
-            ( { model | value = Just value }, Cmd.none )
+            ( { model | value = value }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )

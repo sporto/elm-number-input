@@ -2,7 +2,7 @@ module NumberInput.View exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (class, style, value)
-import Html.Events exposing (on, onWithOptions, targetValue)
+import Html.Events exposing (on, onWithOptions, keyCode, targetValue)
 import Json.Decode as Decode
 import NumberInput.Models exposing (..)
 import String
@@ -19,30 +19,33 @@ view config maybeValue =
         input
             [ class config.inputClass
             , onChangeAttr config
+            , onKeyDownAttr config maybeValue
             , style config.inputStyles
             , value val
             ]
             []
 
 
+onKeyDownAttr : Config msg -> Maybe Float -> Attribute msg
+onKeyDownAttr config maybeValue =
+    let
+        eventOptions =
+            { stopPropagation = False
+            , preventDefault = True
+            }
 
--- onKeyDownAttr : Config msg -> Attribute msg
--- onKeyDownAttr config =
---     let
---         eventOptions =
---             { stopPropagation = False
---             , preventDefault = True
---             }
---         -- callbackDecoder =
---         --     toFloat >> config.onChange >> Decode.succeed
---         filter =
---             .keyCode >> config.onChange >> Decode.succeed
---         -- Decode.succeed event.keyCode
---         decoder =
---             eventDecoder
---                 |> Decode.andThen filter
---     in
---         onWithOptions "keydown" eventOptions decoder
+        filterDecoder code =
+            if isNumber code then
+                Decode.fail "Number"
+            else
+                Decode.succeed code
+
+        decoder =
+            keyCode
+                |> Decode.andThen filterDecoder
+                |> Decode.map (always (config.onChange maybeValue))
+    in
+        onWithOptions "keydown" eventOptions decoder
 
 
 onChangeAttr : Config msg -> Attribute msg
@@ -50,7 +53,7 @@ onChangeAttr config =
     let
         valueDecoder =
             String.toFloat
-                >> Result.withDefault 0
+                >> Result.toMaybe
                 >> config.onChange
                 >> Decode.succeed
 
@@ -59,3 +62,8 @@ onChangeAttr config =
                 |> Decode.andThen valueDecoder
     in
         on "change" decoder
+
+
+isNumber : Int -> Bool
+isNumber keyCode =
+    (keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)

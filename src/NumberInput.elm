@@ -8,6 +8,17 @@ module NumberInput
         , view
         )
 
+{-|
+# Types
+@docs Config
+
+# Configuration
+@docs newConfig, withInputClass, withInputStyles, withPlaceholder
+
+# View
+@docs view
+-}
+
 import Html exposing (Html)
 import NumberInput.Messages as Messages
 import NumberInput.Models as Models
@@ -15,22 +26,24 @@ import NumberInput.Update as Update
 import NumberInput.View as View
 
 
+{-|
+TODO
+-}
 type Config msg
     = PrivateConfig (Models.Config msg)
 
 
-
--- type State
---     = PrivateState Models.State
--- type Msg
---     = PrivateMsg Messages.Msg
-
-
-newConfig : (Float -> msg) -> Config msg
+{-|
+TODO
+-}
+newConfig : (Maybe Float -> msg) -> Config msg
 newConfig onInputMsgCtr =
     PrivateConfig (Models.newConfig onInputMsgCtr)
 
 
+{-|
+TODO
+-}
 withInputClass : String -> Config msg -> Config msg
 withInputClass classes config =
     let
@@ -40,6 +53,9 @@ withInputClass classes config =
         fmapConfig fn config
 
 
+{-|
+TODO
+-}
 withInputStyles : List ( String, String ) -> Config msg -> Config msg
 withInputStyles styles config =
     let
@@ -49,6 +65,9 @@ withInputStyles styles config =
         fmapConfig fn config
 
 
+{-|
+TODO
+-}
 withPlaceholder : String -> Config msg -> Config msg
 withPlaceholder placeholder config =
     let
@@ -70,12 +89,9 @@ fmapConfig fn config =
         PrivateConfig (fn config_)
 
 
-
--- initialState : String -> State
--- initialState id =
---     PrivateState (Models.initialState id)
-
-
+{-|
+TODO
+-}
 view : Config msg -> Maybe Float -> Html msg
 view config maybeValue =
     let
@@ -88,37 +104,9 @@ view config maybeValue =
         View.view config_ maybeValue
 
 
-
--- Html.map PrivateMsg (View.view config_ maybeValue)
--- update : Config msg -> Msg -> State -> ( State, Cmd msg )
--- update config msg model =
---     let
---         config_ =
---             unwrapConfig config
---         msg_ =
---             unwrapMsg msg
---         model_ =
---             unwrapState model
---     in
---         let
---             ( mdl, cmd ) =
---                 Update.update config_ msg_ model_
---         in
---             ( PrivateState mdl, cmd )
-
-
 {-|
 @priv
 -}
 unwrapConfig : Config msg -> Models.Config msg
 unwrapConfig (PrivateConfig config) =
     config
-
-
-
--- unwrapMsg : Msg -> Messages.Msg
--- unwrapMsg (PrivateMsg msg) =
---     msg
--- unwrapState : State -> Models.State
--- unwrapState (PrivateState state) =
---     state
