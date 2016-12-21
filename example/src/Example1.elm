@@ -22,7 +22,7 @@ Your model should store the selected item and the state of the Select component(
 -}
 initialModel : Model
 initialModel =
-    { value = Nothing
+    { value = Just 1.5
     }
 
 
@@ -74,11 +74,5 @@ view model =
     div [ class "bg-silver p1" ]
         [ h3 [] [ text "Basic example" ]
         , text (toString model.value)
-          -- Render the Select view. You must pass:
-          -- - The configuration
-          -- - A unique identifier for the select component
-          -- - The Select internal state
-          -- - A list of items
-          -- - The currently selected item as Maybe
         , NumberInput.view inputConfig model.value
         ]
