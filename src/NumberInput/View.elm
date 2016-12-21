@@ -3,7 +3,7 @@ module NumberInput.View exposing (..)
 import Char
 import Html exposing (..)
 import Html.Attributes exposing (class, style, value)
-import Html.Events exposing (on, onWithOptions, keyCode, targetValue)
+import Html.Events as Events
 import Json.Decode as Decode
 import NumberInput.Models exposing (..)
 import String
@@ -13,27 +13,28 @@ view : Config msg -> String -> Html msg
 view config currentValue =
     input
         [ class config.inputClass
-          -- , onKeyDownAttr config currentValue
-        , onKeyUpAttr config currentValue
+        , onKeyDownAttr config currentValue
+          -- , onKeyUpAttr config currentValue
         , style config.inputStyles
         , value currentValue
         ]
         []
 
 
+eventOptions : Events.Options
 eventOptions =
     { stopPropagation = False
     , preventDefault = True
     }
 
 
-type KeyCodeName
+type Key
     = Backspace
     | Dot
-    | Other
+    | OtherKey
 
 
-toKeyCodeName : Int -> KeyCodeName
+toKeyCodeName : Int -> Key
 toKeyCodeName keyCode =
     case keyCode of
         8 ->
@@ -43,7 +44,20 @@ toKeyCodeName keyCode =
             Dot
 
         _ ->
-            Other
+            OtherKey
+
+
+type alias KeyDownEvent =
+    { keyCode : Int
+    , currentValue : String
+    }
+
+
+keyDownEventDecoder : Decode.Decoder KeyDownEvent
+keyDownEventDecoder =
+    Decode.map2 KeyDownEvent
+        (Decode.field "keyCode" Decode.int)
+        (Decode.at [ "target" ] (Decode.field "value" Decode.string))
 
 
 {-|
@@ -63,22 +77,25 @@ onKeyDownAttr config currentValue =
                 _ ->
                     isNumberKeycode keyCode
 
-        filterDecoder keyCode =
-            if isValidKeydown keyCode then
-                -- Fails lets the value through
-                Decode.fail "Not valid"
+        filterDecoder keyDownEvent =
+            if isValidKeydown keyDownEvent.keyCode then
+                keyDownEvent.keyCode
+                    |> makeNewValueFromKeyCode keyDownEvent.currentValue
+                    |> config.onChange
+                    |> Decode.succeed
             else
-                currentValue |> config.onChange |> Decode.succeed
+                Decode.fail "Stop!"
 
         decoder =
-            keyCode
+            keyDownEventDecoder
                 |> Decode.andThen filterDecoder
     in
-        onWithOptions "keydown" eventOptions decoder
+        Events.onWithOptions "keydown" eventOptions decoder
 
 
 {-|
 On Key up filters out non number values from going out
+Keyup receives the new value
 -}
 onKeyUpAttr : Config msg -> String -> Attribute msg
 onKeyUpAttr config currentValue =
@@ -89,29 +106,32 @@ onKeyUpAttr config currentValue =
                 >> Decode.succeed
 
         decoder =
-            targetValue
+            Events.targetValue
                 |> Decode.andThen filterDecoder
     in
-        onWithOptions "keyup" eventOptions decoder
-
-
-
--- onChangeAttr : Config msg -> Attribute msg
--- onChangeAttr config =
---     let
---         valueDecoder =
---             config.onChange
---                 >> Decode.succeed
---         decoder =
---             targetValue
---                 |> Decode.andThen valueDecoder
---     in
---         on "change" decoder
+        Events.onWithOptions "keyup" eventOptions decoder
 
 
 isNumberKeycode : Int -> Bool
 isNumberKeycode keyCode =
     (keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)
+
+
+makeNewValueFromKeyCode : String -> Int -> String
+makeNewValueFromKeyCode currentValue keyCode =
+    let
+        char =
+            Char.fromCode keyCode
+
+        charAsStr =
+            String.fromChar char
+    in
+        case toKeyCodeName keyCode of
+            Backspace ->
+                String.dropRight 1 currentValue
+
+            _ ->
+                currentValue ++ charAsStr
 
 
 makeNewValue : String -> String -> String
