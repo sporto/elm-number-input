@@ -9,35 +9,25 @@ import NumberInput.Models exposing (..)
 import String
 
 
-view : Config msg -> Maybe Float -> Html msg
-view config maybeValue =
-    let
-        val =
-            maybeValue
-                |> Maybe.map toString
-                |> Maybe.withDefault ""
-    in
-        input
-            [ class config.inputClass
-            , onChangeAttr config
-            , onKeyDownAttr config maybeValue
-            , style config.inputStyles
-            , value val
-            ]
-            []
+view : Config msg -> String -> Html msg
+view config currentValue =
+    input
+        [ class config.inputClass
+        , onChangeAttr config
+        , onKeyDownAttr config currentValue
+        , style config.inputStyles
+        , value currentValue
+        ]
+        []
 
 
-onKeyDownAttr : Config msg -> Maybe Float -> Attribute msg
+onKeyDownAttr : Config msg -> String -> Attribute msg
 onKeyDownAttr config currentValue =
     let
         eventOptions =
             { stopPropagation = False
             , preventDefault = True
             }
-
-        unwrappedValue =
-            currentValue
-                |> Maybe.withDefault 0
 
         filterDecoder code =
             case code of
@@ -53,19 +43,16 @@ onKeyDownAttr config currentValue =
                             Char.fromCode code
                                 |> String.fromChar
 
-                        unwrappedValueAsString =
-                            toString unwrappedValue
-
                         concat =
-                            unwrappedValueAsString ++ charAsString
+                            currentValue ++ charAsString
 
-                        result =
+                        isValidNumberResult =
                             String.toFloat concat
 
                         newValue =
-                            case result of
+                            case isValidNumberResult of
                                 Ok n ->
-                                    Just n
+                                    concat
 
                                 Err _ ->
                                     currentValue
@@ -85,9 +72,7 @@ onChangeAttr : Config msg -> Attribute msg
 onChangeAttr config =
     let
         valueDecoder =
-            String.toFloat
-                >> Result.toMaybe
-                >> config.onChange
+            config.onChange
                 >> Decode.succeed
 
         decoder =

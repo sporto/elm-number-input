@@ -13,7 +13,7 @@ In your main application model you should store:
 - The state for the select component
 -}
 type alias Model =
-    { value : Maybe Float
+    { value : String
     }
 
 
@@ -22,7 +22,7 @@ Your model should store the selected item and the state of the Select component(
 -}
 initialModel : Model
 initialModel =
-    { value = Just 1.5
+    { value = "1.5"
     }
 
 
@@ -33,7 +33,7 @@ Your application messages need to include:
 -}
 type Msg
     = NoOp
-    | OnChange (Maybe Float)
+    | OnChange String
 
 
 {-|
@@ -72,6 +72,6 @@ view : Model -> Html Msg
 view model =
     div [ class "bg-silver p1" ]
         [ h3 [] [ text "Basic example" ]
-        , text (toString model.value)
+        , text model.value
         , NumberInput.view inputConfig model.value
         ]

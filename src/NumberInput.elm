@@ -20,9 +20,7 @@ module NumberInput
 -}
 
 import Html exposing (Html)
-import NumberInput.Messages as Messages
 import NumberInput.Models as Models
-import NumberInput.Update as Update
 import NumberInput.View as View
 
 
@@ -36,7 +34,7 @@ type Config msg
 {-|
 TODO
 -}
-newConfig : (Maybe Float -> msg) -> Config msg
+newConfig : (String -> msg) -> Config msg
 newConfig onInputMsgCtr =
     PrivateConfig (Models.newConfig onInputMsgCtr)
 
@@ -92,16 +90,13 @@ fmapConfig fn config =
 {-|
 TODO
 -}
-view : Config msg -> Maybe Float -> Html msg
-view config maybeValue =
+view : Config msg -> String -> Html msg
+view config currentValue =
     let
         config_ =
             unwrapConfig config
-
-        -- model_ =
-        --     unwrapState model
     in
-        View.view config_ maybeValue
+        View.view config_ currentValue
 
 
 {-|
