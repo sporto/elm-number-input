@@ -13,7 +13,7 @@ view : Config msg -> String -> Html msg
 view config currentValue =
     input
         [ class config.inputClass
-        , onKeyDownAttr config currentValue
+          -- , onKeyDownAttr config currentValue
         , onKeyUpAttr config currentValue
         , style config.inputStyles
         , value currentValue
@@ -27,12 +27,23 @@ eventOptions =
     }
 
 
-backspaceKeyCode =
-    8
+type KeyCodeName
+    = Backspace
+    | Dot
+    | Other
 
 
-dotKeyCode =
-    46
+toKeyCodeName : Int -> KeyCodeName
+toKeyCodeName keyCode =
+    case keyCode of
+        8 ->
+            Backspace
+
+        46 ->
+            Dot
+
+        _ ->
+            Other
 
 
 {-|
@@ -42,11 +53,11 @@ onKeyDownAttr : Config msg -> String -> Attribute msg
 onKeyDownAttr config currentValue =
     let
         isValidKeydown keyCode =
-            case keyCode of
-                8 ->
+            case toKeyCodeName keyCode of
+                Backspace ->
                     True
 
-                46 ->
+                Dot ->
                     True
 
                 _ ->
@@ -84,18 +95,18 @@ onKeyUpAttr config currentValue =
         onWithOptions "keyup" eventOptions decoder
 
 
-onChangeAttr : Config msg -> Attribute msg
-onChangeAttr config =
-    let
-        valueDecoder =
-            config.onChange
-                >> Decode.succeed
 
-        decoder =
-            targetValue
-                |> Decode.andThen valueDecoder
-    in
-        on "change" decoder
+-- onChangeAttr : Config msg -> Attribute msg
+-- onChangeAttr config =
+--     let
+--         valueDecoder =
+--             config.onChange
+--                 >> Decode.succeed
+--         decoder =
+--             targetValue
+--                 |> Decode.andThen valueDecoder
+--     in
+--         on "change" decoder
 
 
 isNumberKeycode : Int -> Bool
@@ -105,11 +116,10 @@ isNumberKeycode keyCode =
 
 makeNewValue : String -> String -> String
 makeNewValue currentValue newValue =
-    let
-        result =
-            String.toFloat newValue
-    in
-        case result of
+    if newValue == "" then
+        newValue
+    else
+        case String.toFloat newValue of
             Ok n ->
                 newValue
 
